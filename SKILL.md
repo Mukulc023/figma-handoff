@@ -117,9 +117,9 @@ If >20 annotations, confirm before placing.
 **Frame placement:** Right of section (`flowNodeBbox.x + width + ~300px`), top-aligned. If no room, below.
 
 **Frame style:**
-- 720–760px wide, dark fill `{r:0.11, g:0.11, b:0.13}`, 56px padding, 16px radius
+- 720–760px wide, white fill `{r:1, g:1, b:1}`, 56px padding, 16px radius, 1px stroke `{r:0.88, g:0.88, b:0.9}`
 - Auto-layout vertical, 28px section spacing
-- Typography: Eyebrow 11px Semi Bold muted | Title 36px Semi Bold white | H2 22px Semi Bold white | H3 15px Semi Bold white | Body 14px Regular light gray 165% line-height
+- Typography: Eyebrow 11px Semi Bold muted gray | Title 36px Semi Bold dark `{r:0.1, g:0.1, b:0.12}` | H2 22px Semi Bold dark | H3 15px Semi Bold dark | Body 14px Regular dark gray `{r:0.25, g:0.25, b:0.28}` 165% line-height
 
 **Content:** Follow prd-template.md, trim for Figma (800–1200 words). Lead with TL;DR, end with Open Questions.
 

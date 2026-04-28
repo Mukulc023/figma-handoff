@@ -133,6 +133,12 @@ Unknown values → `TBD;` + add to PRD Open Questions. Never invent specs.
 
 Anchor connector at trigger point on source screen, not destination.
 
+**Placement — near the relevant UI element, not floating in empty space:**
+- Place the card in the gutter immediately adjacent to the screen, aligned with the UI element or screen section it describes (same Y-position as the trigger element)
+- If the card describes a screen-to-screen transition, place it between the two screens near the flow arrow
+- If multiple interaction cards target the same screen, stack them vertically using the same anti-overlap algorithm as Pointer Callouts (min 28px gap)
+- Connect each card to its trigger element via an elbow connector (same `mkElbow` as Primitive 2)
+
 Use for: any transition, animation, motion, or interaction with timing/duration.
 
 ---
