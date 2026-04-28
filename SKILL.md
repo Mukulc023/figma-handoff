@@ -129,6 +129,15 @@ The output gives you a map of `{ section name → real Y coordinate }`. Use thes
 
 If the brief includes a Linear ticket URL, retrieve it via the Linear connector for the "why" — user problem, success metric, constraints.
 
+If the brief's "Related work" field includes a Granola meeting notes URL (anything matching `granola.ai` or a Granola-shared link), fetch the meeting content using the Granola MCP server. Use the Granola tools to:
+1. Search for the meeting by URL, title, or date mentioned in the brief
+2. Retrieve the full notes, transcript summary, and action items
+3. Extract design decisions, constraints, and requirements discussed in the meeting
+
+Fold Granola context into the PRD's "Why" and "Context" sections. If specific action items from the meeting relate to the handoff, list them in the PRD. If the Granola MCP server is not connected, tell the user: *"I see a Granola link but don't have the Granola MCP server connected. You can add it in Claude Code settings, or paste the relevant meeting notes here."*
+
+**Granola MCP setup** — The official Granola MCP server is at `https://mcp.granola.ai/mcp` (Streamable HTTP transport, OAuth 2.0 auth). Users can connect it in their Claude Code MCP settings. See `references/granola-mcp-setup.md` for configuration details.
+
 ### Step 8: Plan the annotations
 
 Build an annotation plan and share a brief summary with the user *before* placing anything. The plan should account for ALL six primitives (see `references/annotation-primitives.md`), not just pointer callouts:
@@ -216,6 +225,7 @@ Read these as needed:
 - **`references/brief-frame-template.md`** — documentation of what's in the brief and why each field exists. Useful as a reference when parsing the brief in Step 5 or if the designer asks about a field.
 - **`references/handoff-completeness-checklist.md`** — content rubric to run through after annotations are placed and before the PRD is written. Catches gaps the visual design alone won't surface (assets, states, accessibility, performance flags).
 - **`references/prd-template.md`** — output structure for the PRD. Read this before Step 11.
+- **`references/granola-mcp-setup.md`** — how to connect the Granola MCP server so the skill can pull meeting notes automatically.
 
 ## Phrasing style across all annotations
 

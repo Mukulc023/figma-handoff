@@ -26,6 +26,7 @@ const refs = [
   "brief-frame-template.md",
   "handoff-completeness-checklist.md",
   "prd-template.md",
+  "granola-mcp-setup.md",
 ];
 
 for (const ref of refs) {

@@ -33,6 +33,7 @@ This installs the skill into your Claude Code configuration. After installation,
 - [Claude Code](https://claude.ai/code) CLI or desktop app
 - Figma MCP server connected in Claude Code
 - A Figma file with a design flow to hand off
+- *(Optional)* [Granola MCP server](references/granola-mcp-setup.md) for pulling meeting notes into PRDs
 
 ## How to use
 
@@ -76,7 +77,8 @@ figma-handoff/
     ├── brief-creation-snippet.md         # Plugin API JS for Handoff Brief frames
     ├── brief-frame-template.md           # 13-field brief template for designers
     ├── handoff-completeness-checklist.md # Pre-PRD content rubric
-    └── prd-template.md                   # PRD output structure
+    ├── prd-template.md                   # PRD output structure
+    └── granola-mcp-setup.md              # Granola MCP integration guide
 ```
 
 ## License
