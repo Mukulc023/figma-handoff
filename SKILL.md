@@ -99,8 +99,10 @@ Use `Figma:use_figma` on `flowFileKey`. Place on layer **"Handoff Annotations [Y
 
 **Critical rules (non-negotiable):**
 - `figma.createConnector()` does NOT work in design files — use `figma.createVector()` + `setVectorNetworkAsync()` (see annotation-primitives.md Primitive 2)
-- Place notes in gutter adjacent to screen (~80px), not stacked far away
-- Run anti-overlap algorithm for vertically stacked notes
+- **All annotations for one screen go on the SAME side** (left or right) — pick based on available space. Never mix sides per screen
+- Place all notes in a single column 60px from screen edge. Callouts and interaction cards share the same column, sorted by anchor Y
+- Connect each note to its target UI element with an L-shaped elbow connector that routes through a consistent vertical channel (see `mkElbow` in annotation-primitives.md)
+- Run anti-overlap algorithm for vertically stacked notes (min 28px gap)
 - Inter font: "Semi Bold" (with space)
 - Verify creation count — if 0 of an expected type, investigate
 

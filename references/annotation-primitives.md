@@ -37,67 +37,123 @@ Body: 12px Inter Regular, near-white, 145% line-height.
 | CONTENT | Fields, content rules, copy | `0.51, 0.31, 0.83` | `#8350D4` |
 | PHASE | Scope in/out | `0.85, 0.46, 0.04` | `#D9760A` |
 
-### Connector implementation
+### Placement & side selection
 
-**`figma.createConnector()` DOES NOT WORK in design files** — silently creates nothing. Use `figma.createVector()` + `setVectorNetworkAsync()`:
+**First, decide which side of the screen composition ALL annotations go on.** Don't mix left and right — pick one side per screen:
+
+1. Check what's to the left and right of the screen frame
+2. If the screen is the **leftmost** in a row → annotations go **left**
+3. If the screen is the **rightmost** in a row → annotations go **right**
+4. If screens are in a single column or there's more space on one side → pick the side with more empty canvas
+5. **All annotations for one screen go on the same side** — callouts, interaction cards, everything
+
+**Note column placement:**
+- The note column sits **60px from the screen edge** on the chosen side
+- All notes in that column are **left-aligned** (if right of screen) or **right-aligned** (if left of screen)
+- Note width is fixed at 232px
+
+**Vertical positioning — anchor each note to its target UI element:**
+- Each note's vertical center aligns with the Y-center of the UI element it annotates
+- If notes would overlap, push them apart using the anti-overlap algorithm below
+
+**Anti-overlap algorithm:**
 
 ```javascript
-const mkElbow = async (fromX, fromY, toX, toY) => {
-  const midX = (fromX + toX) / 2;
-  const minX = Math.min(fromX, toX), minY = Math.min(fromY, toY);
+const NOTE_W = 232;
+const GUTTER = 60; // gap between screen edge and note column
+const NOTE_GAP = 28; // min vertical gap between notes
+
+// Decide side: 'left' or 'right'
+const side = screenIsLeftmost ? 'left' : 'right';
+const noteColumnX = side === 'right'
+  ? screenBbox.x + screenBbox.width + GUTTER
+  : screenBbox.x - GUTTER - NOTE_W;
+
+// Sort callouts by the Y position of their target UI element
+const sorted = callouts.sort((a, b) => a.anchorY - b.anchorY);
+
+let lastNoteBottom = -Infinity;
+for (const callout of sorted) {
+  const estHeight = estimateNoteHeight(callout.text);
+  const desiredY = callout.anchorY - estHeight / 2; // center-align with anchor
+  const actualY = Math.max(desiredY, lastNoteBottom + NOTE_GAP);
+  callout.noteX = noteColumnX;
+  callout.noteY = actualY;
+  lastNoteBottom = actualY + estHeight;
+}
+```
+
+### Connector implementation
+
+**`figma.createConnector()` DOES NOT WORK in design files** — silently creates nothing. Use `figma.createVector()` + `setVectorNetworkAsync()`.
+
+The elbow connector makes an **L-shaped path**: horizontal from the note edge, then vertical to the anchor Y, then horizontal into the UI element. The bend hugs the gutter — it does NOT cut diagonally across the canvas.
+
+```javascript
+// side: 'left' or 'right'
+// noteX, noteY, noteW, noteH: note frame bounds
+// anchorX, anchorY: exact point on the UI element the arrow should touch
+const mkElbow = async (noteX, noteY, noteW, noteH, anchorX, anchorY, side) => {
+  // Start point: edge of note, at note's vertical center
+  const fromX = side === 'right' ? noteX : noteX + noteW;
+  const fromY = noteY + noteH / 2;
+  // End point: the UI element
+  const toX = anchorX;
+  const toY = anchorY;
+  // Bend column: 20px from the screen edge (between note and screen)
+  const bendX = side === 'right'
+    ? noteX - 20        // left of the note column
+    : noteX + noteW + 20; // right of the note column
+
+  // Normalize to local coordinates (vector bbox starts at 0,0)
+  const minX = Math.min(fromX, toX, bendX);
+  const minY = Math.min(fromY, toY);
   const lFx = fromX - minX, lFy = fromY - minY;
+  const lBx = bendX - minX, lBy_from = fromY - minY, lBy_to = toY - minY;
   const lTx = toX - minX, lTy = toY - minY;
-  const lMx = midX - minX;
+
   const vec = figma.createVector();
   vec.name = 'Elbow';
   vec.strokes = [{ type: 'SOLID', color: { r: 0.7, g: 0.7, b: 0.75 } }];
-  vec.strokeWeight = 2;
+  vec.strokeWeight = 1.5;
+
   try {
     await vec.setVectorNetworkAsync({
       vertices: [
-        { x: lFx, y: lFy, strokeCap: 'NONE' },
-        { x: lMx, y: lFy, strokeCap: 'NONE', cornerRadius: 8 },
-        { x: lMx, y: lTy, strokeCap: 'NONE', cornerRadius: 8 },
-        { x: lTx, y: lTy, strokeCap: 'ARROW_LINES' }
+        { x: lFx, y: lFy, strokeCap: 'NONE' },                   // note edge
+        { x: lBx, y: lFy, strokeCap: 'NONE', cornerRadius: 6 },  // bend 1
+        { x: lBx, y: lTy, strokeCap: 'NONE', cornerRadius: 6 },  // bend 2
+        { x: lTx, y: lTy, strokeCap: 'ARROW_LINES' }             // arrow tip at UI element
       ],
-      segments: [{ start: 0, end: 1 }, { start: 1, end: 2 }, { start: 2, end: 3 }],
+      segments: [
+        { start: 0, end: 1 },
+        { start: 1, end: 2 },
+        { start: 2, end: 3 }
+      ],
       regions: []
     });
   } catch (e) {
-    const pathData = `M ${lFx} ${lFy} L ${lMx} ${lFy} L ${lMx} ${lTy} L ${lTx} ${lTy}`;
-    vec.vectorPaths = [{ windingRule: 'NONE', data: pathData }];
+    // Fallback: sharp corners
+    const d = `M ${lFx} ${lFy} L ${lBx} ${lFy} L ${lBx} ${lTy} L ${lTx} ${lTy}`;
+    vec.vectorPaths = [{ windingRule: 'NONE', data: d }];
     vec.strokeCap = 'ARROW_LINES';
   }
-  vec.x = minX; vec.y = minY;
+
+  vec.x = minX;
+  vec.y = minY;
   pageNode.appendChild(vec);
   return vec;
 };
 ```
 
-- `fromX/Y` = note edge (at vertical center). `toX/Y` = screen anchor (arrow tip lands here)
-- `cornerRadius: 8` = rounded bends. `ARROW_LINES` only on last vertex
-- No invisible anchor rectangles needed — vectors use absolute coordinates
-- After placing all elbows, verify count. 0 elbows = silent failure, investigate
-
-### Placement rules
-
-- Notes in **gutter adjacent to screen** (~60px from edge), not stacked far away
-- Left of screen if space left, right if space right
-- Min 28px vertical gap between stacked notes
-
-**Anti-overlap algorithm:**
-
-```javascript
-let lastNoteBottom = -Infinity;
-const NOTE_GAP = 28;
-for (const callout of calloutsSortedByAnchorY) {
-  const estHeight = estimateNoteHeight(callout.text);
-  const desiredY = callout.anchorY - estHeight / 2;
-  const actualY = Math.max(desiredY, lastNoteBottom + NOTE_GAP);
-  note.y = actualY;
-  lastNoteBottom = actualY + estHeight;
-}
-```
+**Key points:**
+- `fromX/Y` = note edge at vertical center (right edge if notes are left of screen, left edge if right)
+- `bendX` = a consistent vertical channel 20px from the note column — all elbows route through this channel so lines stay parallel and clean
+- `toX/Y` = exact point on the UI element (use element's absoluteBoundingBox center, or left/right edge depending on side)
+- `cornerRadius: 6` = subtle rounded bends
+- `strokeWeight: 1.5` = thin, doesn't compete with the design
+- `ARROW_LINES` only on the last vertex — arrowhead points at the UI element, not the note
+- After placing all elbows, **verify count**. 0 elbows = silent failure, investigate
 
 ### Content style (Headout voice)
 
@@ -133,11 +189,13 @@ Unknown values → `TBD;` + add to PRD Open Questions. Never invent specs.
 
 Anchor connector at trigger point on source screen, not destination.
 
-**Placement — near the relevant UI element, not floating in empty space:**
-- Place the card in the gutter immediately adjacent to the screen, aligned with the UI element or screen section it describes (same Y-position as the trigger element)
-- If the card describes a screen-to-screen transition, place it between the two screens near the flow arrow
-- If multiple interaction cards target the same screen, stack them vertically using the same anti-overlap algorithm as Pointer Callouts (min 28px gap)
-- Connect each card to its trigger element via an elbow connector (same `mkElbow` as Primitive 2)
+**Placement — same side and column as Pointer Callouts for that screen:**
+- Interaction cards go in the **same annotation column** as pointer callouts (same side, same 60px gutter)
+- They are interleaved with callouts in the vertical stack, sorted by anchor Y-position alongside all other annotations for that screen
+- Each card's vertical center aligns with the Y-center of its trigger UI element
+- Use the **same anti-overlap algorithm** and **same `mkElbow` connector** as Pointer Callouts (Primitive 2)
+- If the card describes a screen-to-screen transition, anchor it to the trigger element on the source screen
+- Card width is 280px (wider than callouts) — the note column accommodates whichever is wider
 
 Use for: any transition, animation, motion, or interaction with timing/duration.
 
