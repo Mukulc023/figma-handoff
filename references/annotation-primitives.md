@@ -183,9 +183,9 @@ animation-curve: ease-in-out;
 animation-duration: 500ms;
 ```
 
-Mapping: `transition.type` → animate (SMART_ANIMATE→"Smart animate", PUSH→"Push [dir]", DISSOLVE→"Cross-fade"). `transition.easing.type` → animation-curve. `transition.duration` × 1000 → ms.
+**Always extract specs via Plugin API** — see `references/animation-extraction-snippet.md`. Run the snippet on each screen to get trigger, transition type, easing, and duration directly from prototype reactions. Map using the tables in that file.
 
-Unknown values → `TBD;` + add to PRD Open Questions. Never invent specs.
+Never write `TBD` if the Plugin API is accessible. If a reaction exists but has `transition: null` or `INSTANT`, write `animate: Instant (no transition);`. Only if the Plugin API call itself fails should you ask the user for specs.
 
 Anchor connector at trigger point on source screen, not destination.
 

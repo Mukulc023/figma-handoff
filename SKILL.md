@@ -58,9 +58,10 @@ Use `briefNodeId` from memory. Call `Figma:get_design_context` with `fileKey: fl
 Call `Figma:get_metadata` on `flowNodeId` for screen-level overview. Identify mobile screens (typically 375×812) vs. existing annotations.
 
 For each screen individually (NOT whole section — times out), call `Figma:get_design_context` to extract:
-- Prototype reactions (trigger, action, destination, transition type/duration/easing)
 - Notable component instances by layer name
 - Visible text content
+
+**MANDATORY — extract animation specs via Plugin API (not get_design_context).** `get_design_context` often omits prototype reaction details. Instead, use `Figma:use_figma` to traverse every node and read reactions directly. **Read `references/animation-extraction-snippet.md` now.** Run the snippet for each screen to get the complete list of transitions with trigger, action, destination, easing, and duration. This is the only reliable way to get full animation data — never mark specs as TBD without running this extraction first.
 
 **MANDATORY before placing annotations:** For scrolling screens (>1500px tall), use `Figma:use_figma` to traverse children and capture real bounding boxes:
 
@@ -84,12 +85,12 @@ Use these real Y values for annotation placement — never assume positions.
 
 1. **Section Banners** — one per screen cluster
 2. **Pointer Callouts** — element-specific notes with category pills (BEHAVIOR/INTERACTION/CONTENT/PHASE)
-3. **Interaction Note Cards** — every transition/animation with spec format `animate: ...; animation-curve: ...; animation-duration: ...;` (use `TBD` for unknowns)
+3. **Interaction Note Cards** — every transition/animation with spec format `animate: ...; animation-curve: ...; animation-duration: ...;` (extracted via Plugin API in Step 6)
 4. **Notes Sticky** — general notes (dependencies, phases, assets, backend)
 5. **Trigger Labels** — user action on flow arrows
 6. **Flow Connectors** — ALL CAPS between-screen path labels
 
-**Incomplete handoff = one with only Pointer Callouts.** Every transition needs an Interaction Note Card (with `TBD` if specs unavailable). 3+ general notes → Notes Sticky required.
+**Incomplete handoff = one with only Pointer Callouts.** Every transition needs an Interaction Note Card with actual specs from the Plugin API. 3+ general notes → Notes Sticky required.
 
 Share plan summary before placing (e.g. "5 banners, 11 callouts, 4 interaction notes, 1 sticky").
 
@@ -143,7 +144,7 @@ If >20 annotations, confirm before placing.
 
 ## Hard rules
 
-- Never invent prototype connections or animation specs — use `TBD` + Open Questions
+- Never invent prototype connections or animation specs — extract via Plugin API (`references/animation-extraction-snippet.md`). If Plugin API fails, ask the user for specs rather than writing TBD
 - Never delete/modify existing designer annotations — only add to fresh layer
 - Never read the brief in the same turn you created it
 - Never re-ask for links already in conversation memory

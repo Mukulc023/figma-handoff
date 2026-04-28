@@ -53,6 +53,7 @@ const refs = [
   "handoff-completeness-checklist.md",
   "prd-template.md",
   "granola-mcp-setup.md",
+  "animation-extraction-snippet.md",
 ];
 
 for (const ref of refs) {
