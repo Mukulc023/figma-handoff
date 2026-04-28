@@ -1,0 +1,23 @@
+{
+  "name": "figma-handoff-annotator",
+  "version": "1.0.0",
+  "description": "Claude Code skill that automates Figma design-to-developer handoffs with annotations and PRD generation",
+  "bin": {
+    "figma-handoff-annotator": "./install.mjs"
+  },
+  "keywords": [
+    "claude-code",
+    "figma",
+    "handoff",
+    "design",
+    "skill",
+    "annotations",
+    "prd"
+  ],
+  "author": "Mukulc023",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mukulc023/figma-handoff.git"
+  }
+}
