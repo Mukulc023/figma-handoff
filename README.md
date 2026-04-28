@@ -15,7 +15,7 @@ When a designer shares a Figma URL and says "handoff", this skill:
 ## Quick Install
 
 ```bash
-npx github:Mukulc023/figma-handoff
+npx figma-handoff-annotator
 ```
 
 This clones the repo, copies the skill files to `~/.claude/skills/figma-handoff/`, and adds the Granola MCP server to your Claude Code settings. After installation, just share a Figma URL in Claude Code and say "handoff".
